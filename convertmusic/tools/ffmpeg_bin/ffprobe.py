@@ -6,6 +6,7 @@ Does not work for module files.
 
 import subprocess
 import json
+import hashlib
 from ..probe import MediaProbe, ProbeFactory
 from .ffmpeg import convert
 
@@ -92,6 +93,27 @@ def _json_probe(srcfile):
     """
     return json.loads(__run(srcfile))
 
+def _hash_tags(srcfile):
+    with open(srcfile, 'rb') as inp:
+        hashes = {
+            'sha1': hashlib.sha1(),
+            'sha256': hashlib.sha256()
+        }
+        size = 0
+        buff = inp.read(4096)
+        while len(buff) > 0:
+            size += len(buff)
+            for h in hashes.values():
+                h.update(buff)
+            buff = inp.read(4096)
+        tags = {}
+        for k,h in hashes.items():
+            tags[k] = h.hexdigest()
+        tags['size_bytes'] = str(size)
+        return tags
+
+
+
 class FfProbe(MediaProbe):
     def __init__(self, filename):
         MediaProbe.__init__(self, filename)
@@ -111,6 +133,8 @@ def probe(srcfile):
     for s in j['streams']:
         if s['codec_type'] == 'audio':
             # print("DEBUG probe stream keys: {0}".format(repr(s.keys())))
+            for tag_name, tag_value in _hash_tags(srcfile).items():
+                p.set_tag(tag_name, tag_value)
             p.codec = s['codec_name']
             p.sample_rate = int(s['sample_rate'])
             if 'bit_rate' in s:
@@ -119,6 +143,9 @@ def probe(srcfile):
                 # guess?
                 p.bit_rate = 320000
             p.channels = int(s['channels'])
+            if 'tags' in s:
+                for k in s['tags'].keys():
+                    p.set_tag(k.lower(), s['tags'][k])
             if 'format' in j:
                 s = j['format']
                 if 'bit_rate' in s:

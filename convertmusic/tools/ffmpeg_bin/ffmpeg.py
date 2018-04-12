@@ -1,4 +1,5 @@
 
+import os
 import subprocess
 
 BIN_FFMPEG = 'ffmpeg'
@@ -9,6 +10,9 @@ def convert(srcfile, outfile, bit_rate, channels, sample_rate, codec, tags):
     Includes the additional tags.
     """
 
+    if os.path.isfile(outfile):
+        os.unlink(outfile)
+    
     cmd = [
         BIN_FFMPEG, '-i', srcfile,
         '-vn', '-acodec', codec, '-ar', str(sample_rate),

@@ -82,8 +82,9 @@ def comment_tag_extract(probe, song_name, comment_lines):
 
 class XmpProbe(MediaProbe):
     def __init__(self, filename):
-        for tag_name, tag_value in file_checksums(filename):
-            self.set_tag(tag_name, tag_value)
+        MediaProbe.__init__(self, filename)
+        for tag_name, tag_value in file_checksums(filename).items():
+            self.set_tag(tag_name, str(tag_value))
         MediaProbe.__init__(self, filename)
         mod = Module(filename)
         self.sample_rate = OPT_FREQUENCY

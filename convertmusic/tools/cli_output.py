@@ -37,6 +37,12 @@ class Output:
     def list_item(self, item):
         raise NotImplementedError()
 
+    def list_dict_start(self):
+        raise NotImplementedError()
+
+    def list_dict_end(self):
+        self.dict_end()
+
     def list_end(self):
         raise NotImplementedError()
 
@@ -89,6 +95,13 @@ class OutlineOutput(Output):
     def list_start(self, name):
         self._section_start(name)
 
+    def list_dict_start(self):
+        self.__indent += self.__indent_amount
+        if self.__section_count[-1] > 0:
+            self._outln('{0}----'.format(' ' * self.__indent))
+        self.__section_count[-1] += 1
+        self.__section_count.append(0)
+
     def list_item(self, item):
         self.__section_count[-1] += 1
         self._outln('{0}- {1}'.format(' ' * self.__indent, item))
@@ -129,6 +142,10 @@ class YamlOutput(Output):
 
     def list_item(self, item):
         self._outln('{0}- {1}'.format(' ' * self.__indent, item))
+
+    def list_dict_start(self, name):
+        self.list_item('')
+        self.__indent += self.__indent_amount
 
     def list_end(self):
         self._section_end()
@@ -177,6 +194,12 @@ class JsonOutput(Output):
         prev_item = self.__prev_item[-1] and ',' or ''
         self._outln('{0}{1}{2}'.format(' ' * self.__indent, prev_item, json.dumps(item)))
         self.__prev_item[-1] = True
+
+    def list_dict_start(self, name):
+        prev_item = self.__prev_item[-1] and ',' or ''
+        self._outln('{0}{1}{{'.format(' ' * self.__indent, prev_item))
+        self.__prev_item.append(False)
+        self.__indent += 2
 
     def list_end(self):
         self._outln('{0}]'.format(' ' * self.__indent))

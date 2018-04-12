@@ -32,8 +32,8 @@ class MediaProbe(object):
         assert isinstance(name, str)
         if value is None:
             return
-        #if not isinstance(value, str):
-        #    print("bad name/value: {0}={1}".format(repr(name), repr(value)))
+        if not isinstance(value, str):
+            print("bad name/value: {0}={1}".format(repr(name), repr(value)))
         assert isinstance(value, str)
         value = value.strip()
         if len(value) >= 0:

@@ -3,30 +3,9 @@
 import os
 import sys
 from convertmusic.db import get_history
-from convertmusic.tools.cli_output import OutlineOutput, JsonOutput, YamlOutput
-
-def _out_writer(text):
-    print(text)
-
-OUTPUT = OutlineOutput(_out_writer)
-
-class Cmd:
-    def __init__(self):
-        self.name = 'wha??'
-        self.desc = 'No description'
-        self.help = 'No help'
-
-    def run(self, history, args):
-        if len(args) > 0:
-            if args[0] == '-h' or args[0] == 'help':
-                print('{0}: {1}'.format(self.name, self.desc))
-                print(self.help)
-                return
-        OUTPUT.start()
-        ret = self.d(history, args)
-        OUTPUT.end()
-        return ret
-
+from convertmusic.cmd import (
+    Cmd, std_main, OUTPUT
+)
 
 class CmdInfo(Cmd):
     def __init__(self):
@@ -34,10 +13,10 @@ class CmdInfo(Cmd):
         self.desc = 'Information about a single media file.'
         self.help = '''
 Usage:
-    db-explore info (source media file name)
+    info (source media file name)
         '''
 
-    def d(self, history, args):
+    def _cmd(self, history, args):
         OUTPUT.list_start("Source-Info")
         for fn in args:
             OUTPUT.dict_start(fn)
@@ -76,7 +55,7 @@ Where:
                     given.
 '''
 
-    def d(self, history, args):
+    def _cmd(self, history, args):
         count = 0
         if len(args) > 0:
             names = set()
@@ -92,8 +71,9 @@ Where:
             OUTPUT.list_section('duplicates', history.get_duplicate_filenames(fn))
             OUTPUT.dict_end()
         if count <= 0:
-            _err(0, 'No matching files in database')
+            OUTPUT.error('No matching files in database')
         OUTPUT.dict_end()
+        return 0
 
 
 class CmdFrom(Cmd):
@@ -109,7 +89,7 @@ Where:
                     transcoded files.
 """
 
-    def d(self, history, args):
+    def _cmd(self, history, args):
         if len(args) == 0:
             args = history.get_transcoded_filenames()
         OUTPUT.dict_start('transcoded_from')
@@ -123,48 +103,9 @@ Where:
             OUTPUT.list_section(tn, sources)
         OUTPUT.dict_end()
 
-
-COMMANDS = (
-    CmdInfo(),
-    CmdFileList(),
-    CmdFrom()
-)
-
-def main(args):
-    if len(args) <= 1:
-        print("Usage: db-explore (output-dir) [--json] (operation) (args)")
-        print("Where:")
-        print("  output-dir      The directory where the output is generated.  This")
-        print("                  will contain the media.db file.")
-        print("  --json          Output in json format.")
-        print("  --yaml          Output in yaml format.")
-        print("Operations:")
-        max_len = 0
-        for cmd in COMMANDS:
-            max_len = max(max_len, len(cmd.name))
-        for cmd in COMMANDS:
-            print(("  {0:" + str(max_len) + "s}  {1}").format(cmd.name, cmd.desc))
-        print("Use `(operation) help` for details on that command.")
-        return 1
-
-    history = get_history(os.path.join(args[0], 'media.db'))
-    argp = 1
-    global OUTPUT
-    if args[argp] == '--json':
-        OUTPUT = JsonOutput(_out_writer)
-        argp += 1
-    elif args[argp] == '--yaml':
-        OUTPUT = YamlOutput(_out_writer)
-        argp += 1
-    try:
-        for cmd in COMMANDS:
-            if args[argp] == cmd.name:
-                argp += 1
-                return cmd.run(history, args[argp:])
-        print("Unknown action {0}.".format(args[argp]))
-        return 1
-    finally:
-        history.close()
-
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(std_main(sys.argv, (
+        CmdInfo(),
+        CmdFileList(),
+        CmdFrom()
+    )))

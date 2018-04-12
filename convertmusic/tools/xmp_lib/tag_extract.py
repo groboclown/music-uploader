@@ -29,7 +29,7 @@ def file_checksums(src_filename):
         buff = inp.read(4096)
     tags = {}
     for k,h in hashes.items():
-        tags[k] = h.digest().decode('UTF-8')
+        tags[k] = h.hexdigest()
     tags['size_bytes'] = size
     return tags
 

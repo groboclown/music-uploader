@@ -363,16 +363,16 @@ class Impl(DbApi):
         )
         return self.__db.table('SOURCE_FILE').delete_by_id(source_id)
 
-
     def get_source_files_without_tag_names(self, tag_names):
         ret = set()
-        c = self.__db.query("""
-            SELECT source_location, tag_value FROM SOURCE_FILE sf
-            LEFT OUTER JOIN TAG t
-                ON sf.source_file_id = t.source_file_id
-            WHERE t.tag_name in ({0})
-            """.format(', '.join('?' * len(tag_names))), *tag_names)
-        for r in c:
-            if r[1] is None or len(r[1].strip()) <= 0:
+        # Need to perform the query for every tag name, individually.
+        for tag_name in tag_names:
+            c = self.__db.query("""
+                SELECT source_location FROM SOURCE_FILE
+                WHERE source_file_id NOT IN (
+                    SELECT source_file_id FROM TAG WHERE tag_name = ?
+                )
+                """, tag_name)
+            for r in c:
                 ret.add(r[0])
         return ret

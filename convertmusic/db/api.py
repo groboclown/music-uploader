@@ -66,15 +66,14 @@ class MediaFileHistory(object):
         if source_id is None:
             return
         self.__db.remove_tags_for_source_id(source_id)
-        for tk in probe.tag_keys:
-            tv = probe.tag(tk)
-            if tv is not None and tk is not None and len(tv) > 0:
-                self.__db.add_tag(id, tk, tv)
+        for tk, tv in tags.items():
+            if tv is not None and tk is not None and len(tv.strip()) > 0:
+                self.__db.add_tag(source_id, tk, tv.strip())
 
         # Because the tags changed, the keywords changed, too
         self.__db.delete_keywords_for_source_id(source_id)
-        for k in self._get_probe_keywords(probe):
-            self.__db.add_keyword(id, k)
+        for k in self._get_probe_keywords_for_tags(tags):
+            self.__db.add_keyword(source_id, k)
 
     def get_tags_for(self, source_probe_or_file):
         if not isinstance(source_probe_or_file, str):
@@ -193,10 +192,12 @@ class MediaFileHistory(object):
         return self.__db.get_source_files_like(name_like)
 
     def _get_probe_keywords(self, probe):
+        return self._get_probe_keywords_for_tags(probe.get_tags())
+
+    def _get_probe_keywords_for_tags(self, tags):
         keywords = set()
-        for tk in probe.tag_keys:
+        for tk, tv in tags.items():
             if tk not in SKIPPED_KEY_TAGS:
-                tv = probe.tag(tk)
                 keywords = keywords.union(_strip_keywords(tv))
         return keywords
 
