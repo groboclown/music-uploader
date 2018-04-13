@@ -15,6 +15,7 @@ from convertmusic.tools import (
 from convertmusic.tools.cli_output import OutlineOutput, YamlOutput, JsonOutput
 
 SKIP_DIR_FILENAME = '.skip'
+MAX_FILES_PER_DIR = 1000
 
 def _out_writer(text):
     print(text)
@@ -162,7 +163,7 @@ def get_destdir(base_destdir):
         if os.path.isdir(fn) and f.isdigit() and int(f) > biggest:
             biggest = int(f)
     dn = os.path.join(base_destdir, '{0:06d}'.format(biggest))
-    if os.path.isdir(dn) and len(os.listdir(dn)) > 1000:
+    if os.path.isdir(dn) and len(os.listdir(dn)) > MAX_FILES_PER_DIR:
         dn = os.path.join(base_destdir, '{0:06d}'.format(biggest + 1))
     return dn
 

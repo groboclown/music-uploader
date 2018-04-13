@@ -131,7 +131,6 @@ class MediaFileHistory(object):
     def get_tag_matches(self, tags):
         return self.__db.get_source_files_with_tags(tags)
 
-
     def get_close_matches(self, probe, accuracy):
         """
         Accuracy is between 0 and 1
@@ -169,6 +168,14 @@ class MediaFileHistory(object):
         if s_id is not None:
             return self.__db.get_target_file(s_id)
         return None
+
+    def delete_transcoded_to(self, probe_or_filename):
+        if not isinstance(probe_or_filename, str):
+            probe_or_filename = probe_or_filename.filename
+        s_id = self.__db.get_source_file_id(probe_or_filename)
+        if s_id is not None:
+            return self.__db.delete_transcoded_file_for_source_id(s_id) > 0
+        return False
 
     def get_source_file_for_transcoded_filename(self, transcoded_filename):
         return self.__db.get_source_file_for_target_file(transcoded_filename)

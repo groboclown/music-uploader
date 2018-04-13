@@ -211,10 +211,69 @@ Tags will not be removed, only changed.
 
 
 
+class CmdDeleteTransform(Cmd):
+    def __init__(self):
+        Cmd.__init__(self)
+        self.name = 'delete-tform'
+        self.desc = "Delete matching files' tranformed files"
+        self.help = """
+Usage:
+    delete-tform (--db) (--files) (file_pattern1 ...)
+
+Deletes transformed files from either the database (--db) or the filesystem
+(--files) or both.  If none are selected, then the list of files that would
+be affected are listed, but not removed.
+"""
+
+    def _cmd(self, history, args):
+        del_db = False
+        del_files = False
+        argp = 0
+        while True:
+            if args[argp] == '--db':
+                del_db = True
+            elif args[argp] == '--files':
+                del_files = True
+            else:
+                break
+            argp += 1
+        args = args[argp:]
+        OUTPUT.list_start('deleted_transcoded_files')
+        for fn in history.get_source_files():
+            tn = history.get_transcoded_to(fn)
+            if tn is None:
+                continue
+            if not _do_check_file(fn, args) and not _do_check_file(tn, args):
+                continue
+            OUTPUT.list_dict_start()
+            OUTPUT.dict_item('source_file', fn)
+            OUTPUT.dict_item('transcoded_file', tn)
+
+            did_delete = False
+            if del_db:
+                did_delete = history.delete_transcoded_to(fn)
+            OUTPUT.dict_item('deleted_transcode_db_record', did_delete)
+
+            did_delete = False
+            if del_files:
+                if os.path.isfile(tn):
+                    did_delete = True
+                    os.unlink(tn)
+            OUTPUT.dict_item('deleted_transcode_file', did_delete)
+
+            OUTPUT.dict_end()
+
+        OUTPUT.list_end()
+        return 0
+
+
+
 if __name__ == '__main__':
     sys.exit(std_main(sys.argv, (
         CmdReplace(),
         CmdUpdateSource(),
+        CmdDeleteTransform(),
     ), (
         JsonOption(), YamlOption(), TagArg(), PretendArg()
+        # TODO add TransformTranscodeOption
     )))

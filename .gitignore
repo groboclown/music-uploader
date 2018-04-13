@@ -102,3 +102,6 @@ ENV/
 
 # Shared libraries
 *.so
+
+# Temporary output wav files
+tmp.wav

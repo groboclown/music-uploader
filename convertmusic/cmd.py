@@ -3,7 +3,7 @@ import os
 import sys
 from .db import get_history
 from .tools.cli_output import OutlineOutput, JsonOutput, YamlOutput, Output
-
+from . import transform_db_path
 
 def stdout_writer(text):
     print(text)
@@ -70,6 +70,18 @@ class Option:
         if self.has_arg:
             return self.key + '?'
         return self.key
+
+
+class TransformTranscodeOption(Option):
+    def __init__(self):
+        Option.__init__(self)
+        self.name = 'txtc'
+        self.has_arg = True
+        self.help = 'Transform the transcode base directory in the form `src/path=dest/path`'
+
+    def process(self, arg):
+        p = arg.find('=')
+        transform_transcode.set_transcode_transform(arg[0:p].strip(), arg[p+1:].strip())
 
 
 class JsonOption(Option):

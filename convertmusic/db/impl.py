@@ -363,6 +363,12 @@ class Impl(DbApi):
         )
         return self.__db.table('SOURCE_FILE').delete_by_id(source_id)
 
+    def delete_transcoded_file_for_source_id(self, source_id):
+        return self.__db.table('TARGET_FILE').delete_where(
+            "source_file_id = ?",
+            source_id
+        )
+
     def get_source_files_without_tag_names(self, tag_names):
         ret = set()
         # Need to perform the query for every tag name, individually.

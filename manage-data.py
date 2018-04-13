@@ -3,7 +3,8 @@
 import os
 import sys
 from convertmusic.cmd import (
-    OUTPUT, Cmd, Option, std_main, prompt_key, prompt_value
+    OUTPUT, Cmd, Option, std_main, prompt_key, prompt_value,
+    JsonOption, YamlOption, TransformTranscodeOption
 )
 from convertmusic.tools import (
     is_media_file_supported,
@@ -14,6 +15,7 @@ from convertmusic.tools import (
     set_tags_on_file,
     FfProbeFactory
 )
+from convertmusic.transform_transcode import tform_tcode, reverse_tcode
 
 FF_PROBES = FfProbeFactory()
 
@@ -174,7 +176,11 @@ arguments will be checked.
             tn = history.get_transcoded_to(fn)
             if tn is None:
                 continue
-            if not _do_check_file(fn, args) and not _do_check_file(tn, args):
+            local_tn = reverse_tcode(tn)
+            if (not _do_check_file(fn, args)
+                and not _do_check_file(tn, args)
+                and not _do_check_file(reverse_tcode(tn), args)
+                ):
                 continue
             print(fn)
             fn_tags = history.get_tags_for(fn)
@@ -203,7 +209,7 @@ arguments will be checked.
                         OUTPUT.error("Couldn't update tags on source file {0} ({1})".format(
                             fn, e
                         ))
-                set_tags_on_file(tn, fn_tags)
+                set_tags_on_file(local_tn, fn_tags)
                 history.set_tags_for(fn, fn_tags)
         return 0
 
@@ -213,4 +219,8 @@ if __name__ == '__main__':
         CmdDupes(),
         CmdEmptyTags(),
         CmdFixTags()
+    ), (
+        JsonOption(),
+        YamlOption(),
+        TransformTranscodeOption()
     )))

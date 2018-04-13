@@ -25,6 +25,8 @@ python3 main.py (source music directory) (output directory)
 The other tools in the root directory are for managing the transcoded
 files.
 
+You can add a file `.skip` in any directory you want to skip.  Those will not
+be scanned for audio files.
 
 # Dependencies:
 
