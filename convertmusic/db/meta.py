@@ -122,7 +122,12 @@ class Db(object):
         """
         Returns iterable rows.
         """
-        #print("DEUBG query: {0}".format(repr(query)))
+        # print("DEUBG query: {0} {1}".format(repr(query), repr(values)))
+        v2 = []
+        for v in values:
+            if isinstance(v, str) and '\\' in v:
+                v = v.replace('\\', '\\\\')
+            v2.append(v)
         c = self.__conn.execute(query, values)
         for r in c:
             yield r

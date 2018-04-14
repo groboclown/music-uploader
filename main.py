@@ -55,7 +55,7 @@ def find_new_media(rootdir, history):
                 OUTPUT.error('Problem loading file {0}: {1}'.format(
                     filename, e
                 ))
-                traceback.print_exc()
+                # traceback.print_exc()
 
 def simplify_name(name_root):
     name_root = to_ascii(name_root)

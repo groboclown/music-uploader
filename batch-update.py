@@ -176,7 +176,7 @@ Tags will not be removed, only changed.
                 OUTPUT.error('Problem loading file {0}: {1}'.format(
                     filename, e
                 ))
-                traceback.print_exc()
+                # traceback.print_exc()
                 continue
             OUTPUT.list_dict_start()
             OUTPUT.dict_item('source_file', fn)

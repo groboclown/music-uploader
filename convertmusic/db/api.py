@@ -88,7 +88,7 @@ class MediaFileHistory(object):
         self._add_probe(probe)
 
     def delete_source_record(self, probe_or_filename):
-        if not isinstance(probe_or_filename):
+        if not isinstance(probe_or_filename, str):
             probe_or_filename = probe_or_filename.filename
         source_id = self.__db.get_source_file_id(probe_or_filename)
         if source_id is None:
@@ -99,6 +99,21 @@ class MediaFileHistory(object):
             print('ERROR will not delete record; transcode destination exists ({0})'.format(target_file))
             return False
         return self.__db.delete_source_graph(source_id)
+
+    # For removing nasty files. If you really want this function,
+    # strip off the '__'.
+    def __remove_source_records_like(self, like, commit=False):
+        source_ids = self.__db.get_source_file_ids_like(like)
+        for source_id in source_ids:
+            if source_id is None:
+                return False
+
+            if commit:
+                r = self.__db.delete_source_graph(source_id)
+                print("Removed {0} with source_id {1}", r, source_id)
+            else:
+                print(source_id)
+
 
     def get_exact_matches(self, probe):
         """

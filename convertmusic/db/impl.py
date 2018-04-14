@@ -382,3 +382,12 @@ class Impl(DbApi):
             for r in c:
                 ret.add(r[0])
         return ret
+
+    # TODO temporary to get past a weird encoding.
+    def get_source_file_ids_like(self, like):
+        c = self.__db.query("""
+        SELECT source_file_id FROM SOURCE_FILE
+        WHERE source_location LIKE ?
+        """, like)
+        for r in c:
+            yield r[0]
