@@ -229,7 +229,7 @@ be affected are listed, but not removed.
         del_db = False
         del_files = False
         argp = 0
-        while True:
+        while argp < len(args):
             if args[argp] == '--db':
                 del_db = True
             elif args[argp] == '--files':
@@ -265,7 +265,6 @@ be affected are listed, but not removed.
 
         OUTPUT.list_end()
         return 0
-
 
 
 if __name__ == '__main__':

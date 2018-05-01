@@ -211,7 +211,7 @@ def process_probe(history, base_destdir, probe):
 
 
 def main(args):
-    if len(args) != 3:
+    if len(args) < 3:
         print("Usage: main.py [--json] [--yaml] (src music dir) (dest music dir)")
         return 1
     global OUTPUT

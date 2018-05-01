@@ -19,6 +19,7 @@ PROBE_FACTORIES = (
 def is_media_file_supported(filename):
     # Filenames that can't be encoded as utf-8 cause issues with the
     # database.  Therefore, we don't allow them.
+    # This is probably due to the filename being encoded for a different system.
     try:
         bn = filename
         if isinstance(bn, str):

@@ -13,7 +13,7 @@ class Table(object):
         object.__init__(self)
         self.__name = table_name
         self.__conn = conn
-        self.__identity_column_name = columns[0]
+        self.__identity_column_name = columns[0][0]
         self.__insert_column_names = []
         # skip the unique column id
         for c in columns[1:]:
@@ -53,13 +53,20 @@ class Table(object):
         return r
 
     def delete_by_id(self, id):
-        c = self.__conn.execute("DELETE FROM {0} WHERE {1} = ?".format(
-            self.__name, self.__identity_column_name
-        ), [id])
-        ret = c.rowcount
-        c.close()
-        self.__conn.commit()
-        return ret > 0
+        try:
+            c = self.__conn.execute("DELETE FROM {0} WHERE {1} = ?".format(
+                self.__name, self.__identity_column_name
+            ), [id])
+            ret = c.rowcount
+            c.close()
+            self.__conn.commit()
+            return ret > 0
+        except:
+            print("PROBLEM with sql: {0}".format(
+                "DELETE FROM {0} WHERE {1} = ?".format(
+                    self.__name, self.__identity_column_name)
+            ))
+            raise
 
     def delete_where(self, where_clause, *values):
         c = self.__conn.execute('DELETE FROM {0} WHERE {1}'.format(

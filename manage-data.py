@@ -15,7 +15,7 @@ from convertmusic.tools import (
     set_tags_on_file,
     FfProbeFactory
 )
-from convertmusic.transform_transcode import tform_tcode, reverse_tcode
+from convertmusic.transform_db_path import tform_tcode, reverse_tcode
 
 FF_PROBES = FfProbeFactory()
 
@@ -52,6 +52,7 @@ selection: all source files that start with that text will be checked.
             if len(dupe_data) <= 0:
                 continue
             print(fn)
+            print("DEBUG **** {0}".format(dupe_data))
             fn_tags = history.get_tags_for(fn)
             print('- Tags: {0}'.format(repr(fn_tags)))
             fn_keys = history.get_keywords_for(fn)
@@ -59,14 +60,15 @@ selection: all source files that start with that text will be checked.
             print('Duplicate list:')
             remaining_duplicate_count = len(dupe_data)
             for dd in dupe_data:
-                dn = dupe_data['location']
+                # print(repr(dd))
+                dn = dd['source_location']
                 print('  {0}'.format(dn))
                 dn_tags = history.get_tags_for(dn)
                 print('  - Tags: {0}'.format(repr(dn_tags)))
                 dn_keys = history.get_keywords_for(dn)
                 print('  - Keywords: {0}'.format(repr(list(dn_keys))))
                 print('  - Shared Keys: {0}'.format(repr(list(dn_keys.intersection(fn_keys)))))
-                k = prompt_key('(k)eep duplicate, (r)emove duplicate, (s)kip source file, (D)elete source record', 'knsD')
+                k = prompt_key('(k)eep duplicate, (r)emove duplicate, (s)kip source file, (D)elete source record', 'krsD')
                 if 's' == k:
                     break
                 elif 'r' == k:

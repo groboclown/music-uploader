@@ -319,7 +319,6 @@ class Impl(DbApi):
                     # User meaningful data
                     'filename': r[1]
                 })
-            ret.add(r[0])
         return ret
 
     def delete_duplicate_id(self, duplicate_id):

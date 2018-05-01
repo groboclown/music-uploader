@@ -33,7 +33,7 @@ class MediaFileHistory(object):
     def get_duplicate_filenames(self, source_probe_or_file):
         ret = []
         for d in self.get_duplicate_data(source_probe_or_file):
-            ret.append(d['location'])
+            ret.append(d['source_location'])
         return ret
 
     def get_duplicate_data(self, source_probe_or_file):
@@ -93,7 +93,7 @@ class MediaFileHistory(object):
         source_id = self.__db.get_source_file_id(probe_or_filename)
         if source_id is None:
             return False
-        target_file = self.__db.get_target_file(s_id)
+        target_file = self.__db.get_target_file(source_id)
         if target_file is not None:
             # TODO better error reporting
             print('ERROR will not delete record; transcode destination exists ({0})'.format(target_file))

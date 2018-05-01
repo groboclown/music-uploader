@@ -134,6 +134,31 @@ def set_output(output_type, writer=None):
     OUTPUT = o
 
 
+def _help(exec_name, commands, options=None):
+    option_list = []
+    for option in options:
+        option_list.append(option.key_help)
+    print("Usage: {0} (output-dir) {1} (operation) (args)".format(
+        exec_name, ' '.join(option_list)
+    ))
+    print("Where:")
+    max_len = len('output-dir')
+    for option in options:
+        max_len = max(max_len, len(option.key))
+    for cmd in commands:
+        max_len = max(max_len, len(cmd.name))
+    print(("  {0:" + str(max_len) + "s}  {1}").format('output-dir',
+        'The directory where the output was generated.  This will contain the media.db file.'))
+    for option in options:
+        print(("  {0:" + str(max_len) + "s}  {1}").format(option.key_help, option.help))
+    print("Operations:")
+    for cmd in commands:
+        print(("  {0:" + str(max_len) + "s}  {1}").format(cmd.name, cmd.desc))
+    print("Use `(operation) help` for details on that command.")
+    return 1
+
+
+
 def std_main(args, commands, options=None):
     """
     Standard main processing. It should be invoked by running:
@@ -153,34 +178,15 @@ def std_main(args, commands, options=None):
         option_names[option.key] = option
 
     if len(args) <= 1:
-        option_list = []
-        for option in options:
-            option_list.append(option.key_help)
-        print("Usage: {0} (output-dir) {1} (operation) (args)".format(
-            exec_name, ' '.join(option_list)
-        ))
-        print("Where:")
-        max_len = len('output-dir')
-        for option in options:
-            max_len = max(max_len, len(option.key))
-        for cmd in commands:
-            max_len = max(max_len, len(cmd.name))
-        print(("  {0:" + str(max_len) + "s}  {1}").format('output-dir',
-            'The directory where the output was generated.  This will contain the media.db file.'))
-        for option in options:
-            print(("  {0:" + str(max_len) + "s}  {1}").format(option.key_help, option.help))
-        print("Operations:")
-        for cmd in commands:
-            print(("  {0:" + str(max_len) + "s}  {1}").format(cmd.name, cmd.desc))
-        print("Use `(operation) help` for details on that command.")
-        return 1
-
+        return _help(exec_name, commands, options)
     media_db_file = os.path.join(cmd_args[0], 'media.db')
     if not os.path.isfile(media_db_file):
         print("Could not find `media.db` in path {0}".format(cmd_args[0]))
         return 1
     argp = 1
     while argp < len(cmd_args):
+        if cmd_args[argp] == '-h' or cmd_args[argp] == '/h' or cmd_args[argp] == 'help':
+            return _help(exec_name, commands, options)
         if cmd_args[argp] in command_names:
             cmd = command_names[cmd_args[argp]]
             argp += 1

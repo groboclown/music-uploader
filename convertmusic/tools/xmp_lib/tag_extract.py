@@ -319,8 +319,8 @@ def guess_end_characters(prev, line):
 
 
 CRUFT_GENERAL = '#-=\\/_:|'
-CRUFT_OPEN = '[<(>'
-CRUFT_CLOSE = ']>)<'
+CRUFT_OPEN = '[<(>+'
+CRUFT_CLOSE = ']>)<+'
 def strip_character_cruft(text, same_start, same_end):
     if same_start == text or not text.startswith(same_start):
         same_start = ''
