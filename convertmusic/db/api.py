@@ -143,8 +143,8 @@ class MediaFileHistory(object):
             ret.remove(probe.filename)
         return ret
 
-    def get_tag_matches(self, tags):
-        return self.__db.get_source_files_with_tags(tags)
+    def get_tag_matches(self, tags, exact=False):
+        return self.__db.get_source_files_with_tags(tags, exact)
 
     def get_close_matches(self, probe, accuracy):
         """

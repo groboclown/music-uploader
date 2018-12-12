@@ -48,7 +48,7 @@ class CmdFileList(Cmd):
         self.desc = 'List all registered files and basic information about them.'
         self.help = '''
 Usage:
-    db-explore filelist [name-like] ...
+    filelist [name-like] ...
 Where:
     name-like       SQL like phrase for matching the filename.  If not given,
                     then all files are returned.  Multiple of these can be
@@ -82,7 +82,7 @@ class CmdFrom(Cmd):
         self.desc = 'Find the source information for the transcoded file(s)'
         self.help = """
 Usage:
-    db-explore from (output-file) ...
+    from (output-file) ...
 Where:
     output-file     One or more output files to report on its source.
                     If no output file is given, then it will report on all
@@ -103,9 +103,56 @@ Where:
             OUTPUT.list_section(tn, sources)
         OUTPUT.dict_end()
 
+
+class CmdTagSearch(Cmd):
+    def __init__(self):
+        self.name = 'tag-search'
+        self.desc = 'Search for files based on tags.'
+        self.help = """
+Usage:
+    tag-search (-a) (-e) [tag]=[value] ...
+where:
+    -a      If multiple tags are specified, then only files that match
+            all the tags are shown.
+    -e      Exact match.  If not specified, then the value can be a "like"
+            clause.
+    tag     The tag to search against.
+    value   The value to search for.
+"""
+
+    def _cmd(self, history, args):
+        tags = {}
+        match_all = False
+        match_exact = False
+        for a in args:
+            if a == '-a':
+                match_all = True
+            elif a == '-e':
+                match_exact = True
+            else:
+                p = a.find('=')
+                if p > 0:
+                    tag = a[0:p]
+                    value = a[p+1:]
+                    tags[tag] = value
+                else:
+                    OUTPUT.error('Invalid argument format: {0}'.format(a))
+        if match_all:
+            matches = history.get_tag_matches(tags, match_exact)
+        else:
+            matches = set()
+            for k,v in tags.items():
+                m = history.get_tag_matches({k: v}, match_exact)
+                matches = matches.union(m)
+        OUTPUT.dict_start('Tag Matches')
+        OUTPUT.list_section('Source Files', matches)
+        OUTPUT.dict_end()
+
+
 if __name__ == '__main__':
     sys.exit(std_main(sys.argv, (
         CmdInfo(),
         CmdFileList(),
-        CmdFrom()
+        CmdFrom(),
+        CmdTagSearch()
     )))

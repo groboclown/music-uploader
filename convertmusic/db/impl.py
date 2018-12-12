@@ -154,7 +154,7 @@ class Impl(DbApi):
             ret.add(r[0])
         return ret
 
-    def get_source_files_with_tags(self, tags):
+    def get_source_files_with_tags(self, tags, exact=True):
         """
         Returns the source file names that has the matching tag keys to tag values.
         If none are found, then an empty list is returned.
@@ -171,8 +171,13 @@ class Impl(DbApi):
             return []
 
         matching_file_ids = set()
+        if exact:
+            value_match_sql = "tag_value = ?"
+        else:
+            value_match_sql = "tag_value LIKE ?"
         c = self.__db.query(
-            'SELECT source_file_id FROM TAG WHERE tag_name = ? and tag_value = ?',
+            'SELECT source_file_id FROM TAG WHERE tag_name = ? and {0}'.format(
+                value_match_sql),
             tag_keys[0], tag_values[0]
         )
         for r in c:
@@ -182,8 +187,8 @@ class Impl(DbApi):
 
         for i in range(1, len(tag_keys)):
             c = self.__db.query(
-                'SELECT source_file_id FROM TAG WHERE tag_name = ? AND tag_value = ? AND source_file_id in ({0})'.format(
-                    ','.join('?' * len(matching_file_ids))),
+                'SELECT source_file_id FROM TAG WHERE tag_name = ? AND {0} AND source_file_id in ({1})'.format(
+                    value_match_sql, ','.join('?' * len(matching_file_ids))),
                 tag_keys[i], tag_values[i], *matching_file_ids
             )
             matching_file_ids = set()
