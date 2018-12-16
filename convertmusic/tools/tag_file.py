@@ -29,8 +29,6 @@ def set_tags_on_file(filename, new_tags):
 
         os.unlink(old_file)
     except:
-        if os.path.isfile(new_tag_file):
-            os.unlink(new_tag_file)
         if os.path.isfile(old_file):
             if os.path.isfile(filename):
                 os.unlink(filename)

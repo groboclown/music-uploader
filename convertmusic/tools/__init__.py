@@ -4,6 +4,7 @@ from . import tag
 from .probe import MediaProbe
 from .ffmpeg_bin.ffprobe import FfProbeFactory
 from .xmp_lib.xmp_probe import XmpProbeFactory
+from .player import MediaPlayer
 from . import cli_output
 from .tag_file import set_tags_on_file
 
@@ -59,3 +60,9 @@ def probe_media_file(filename):
     if err is not None:
         raise err
     raise Exception('No supported probe for {0}'.format(filename))
+
+
+def get_media_player():
+    # return MediaPlayer(['vlc', '--play-and-exit', '--one-instance', '--playlist-enqueue', '{0}'])
+    # return MediaPlayer(['vlc', '--play-and-stop', '--no-loop', '--one-instance', '--playlist-enqueue', '{0}'])
+    return MediaPlayer(['vlc', '--play-and-stop', '--no-loop', '--one-instance', '{0}'])

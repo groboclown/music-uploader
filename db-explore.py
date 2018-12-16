@@ -48,7 +48,7 @@ class CmdFileList(Cmd):
         self.desc = 'List all registered files and basic information about them.'
         self.help = '''
 Usage:
-    filelist [name-like] ...
+    list [name-like] ...
 Where:
     name-like       SQL like phrase for matching the filename.  If not given,
                     then all files are returned.  Multiple of these can be

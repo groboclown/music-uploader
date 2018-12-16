@@ -3,6 +3,7 @@ from ..tools.unidecode import to_ascii
 from .db_api import DbApi
 
 from ..tools.tag import *
+from ..tools.keywords import get_keywords_for_tags
 
 class MediaFileHistory(object):
     def __init__(self, db):
@@ -72,7 +73,7 @@ class MediaFileHistory(object):
 
         # Because the tags changed, the keywords changed, too
         self.__db.delete_keywords_for_source_id(source_id)
-        for k in self._get_probe_keywords_for_tags(tags):
+        for k in _get_probe_keywords_for_tags(tags):
             self.__db.add_keyword(source_id, k)
 
     def get_tags_for(self, source_probe_or_file):
@@ -151,7 +152,7 @@ class MediaFileHistory(object):
         Accuracy is between 0 and 1
         """
         assert accuracy >= 0 and accuracy <= 1
-        keywords = self._get_probe_keywords(probe)
+        keywords = _get_probe_keywords(probe)
         kcount = len(keywords)
         source_matches = {}
         for sk in self.__db.get_source_files_with_matching_keywords(keywords):
@@ -213,48 +214,19 @@ class MediaFileHistory(object):
     def get_source_files(self, name_like=None):
         return self.__db.get_source_files_like(name_like)
 
-    def _get_probe_keywords(self, probe):
-        return self._get_probe_keywords_for_tags(probe.get_tags())
-
-    def _get_probe_keywords_for_tags(self, tags):
-        keywords = set()
-        for tk, tv in tags.items():
-            if tk not in SKIPPED_KEY_TAGS:
-                keywords = keywords.union(_strip_keywords(tv))
-        return keywords
-
     def _add_probe(self, probe):
         id = self.__db.add_source_file(probe.filename)
         for tk in probe.tag_keys:
             tv = probe.tag(tk)
             if tv is not None and tk is not None and len(tv) > 0:
                 self.__db.add_tag(id, tk, tv)
-        for k in self._get_probe_keywords(probe):
+        for k in _get_probe_keywords(probe):
             self.__db.add_keyword(id, k)
         return id
 
 
-def _strip_keywords(text):
-    # Translate the text into simple ascii characters.
-    # Ascii conversion is done AFTER word split.
-    if text is None:
-        return []
-    r = []
-    b = ''
-    isc = True
-    for c in text:
-        if isc:
-            if c.isalnum():
-                b += c
-            else:
-                isc = False
-                if len(b) > 0:
-                    r.append(to_ascii(b))
-                b = ''
-        else:
-            if c.isalnum():
-                isc = True
-                b = c
-    if len(b) > 0:
-        r.append(to_ascii(b))
-    return r
+def _get_probe_keywords(probe):
+    return get_keywords_for_tags(probe.get_tags())
+
+def _get_probe_keywords_for_tags(tags):
+    return get_keywords_for_tags(tags)

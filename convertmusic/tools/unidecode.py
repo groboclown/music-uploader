@@ -1,6 +1,6 @@
 
 """
-Decodes a unicode string into a ascii-compatible but usable
+Decodes a unicode string into an ascii-compatible but usable
 string.
 
 Alternatively, see unidecode, but that is under the GPL.
