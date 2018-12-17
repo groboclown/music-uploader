@@ -91,8 +91,11 @@ Where:
                 else:
                     print("Unknown command: {0}".format(arg))
         else:
+            cmds = set()
+            for action in self.current_options.values():
+                cmds.add(action.cmds[0])
             max_len = 0
-            cmds = list(self.current_options.keys())
+            cmds = list(cmds)
             cmds.sort()
             for k in cmds:
                 max_len = max(max_len, len(k))
@@ -115,7 +118,7 @@ class QuitAction(Action):
 
 class PlayCurrentAction(Action):
     def __init__(self):
-        self.cmds = ['play', 'p']
+        self.cmds = ['play', 'queue', 'qu']
         self.desc = "Play the current item's transcoded file (default), or the source file."
         self.help = """
 Usage:
@@ -143,7 +146,7 @@ Where:
 
 class ShowCurrentAction(Action):
     def __init__(self):
-        self.cmds = ['show', 's']
+        self.cmds = ['show', 'sh']
         self.desc = "Show details about the current selection."
         self.help = ''
 
@@ -154,7 +157,7 @@ class ShowCurrentAction(Action):
 
 class NextItemAction(Action):
     def __init__(self):
-        self.cmds = ['next', 'n']
+        self.cmds = ['next', 'nx', 'n']
         self.desc = "Advance to next item in the list."
         self.help = """
 Usage:
@@ -175,18 +178,20 @@ Where:
         if do_commit:
             commit()
         next = min(len(item_list), current_index + 1)
-        if do_play and next != current_index:
+        if do_play and next != current_index and next >= 0 and next < len(item_list):
+            current = item_list[next]
             source = current.transcoded_to
-            if not os.path.isfile(source):
-                print('Cannot find file `{0}`'.format(source))
-            else:
-                get_media_player().play_file(source)
+            if source is not None:
+                if not os.path.isfile(source):
+                    print('Cannot find file `{0}`'.format(source))
+                else:
+                    get_media_player().play_file(source)
         return next
 
 
 class PrevItemAction(Action):
     def __init__(self):
-        self.cmds = ['prev', 'back']
+        self.cmds = ['prev', 'back', 'bk']
         self.desc = "Go back to the previous item in the list."
         self.help = ''
 
@@ -269,7 +274,7 @@ Where:
 
 class SearchAction(Action):
     def __init__(self):
-        self.cmds = ['search', 's', 'find']
+        self.cmds = ['search', 'sr', 'find']
         self.desc = "Update the current list with files"
         self.help = """
 Usage:
@@ -373,7 +378,7 @@ Where:
 
 class FilterAction(Action):
     def __init__(self):
-        self.cmds = ['filter']
+        self.cmds = ['filter', 'ft']
         self.desc = "Filter the list of items with a specific query."
         self.help = """
 The filtering starts at the current index.
@@ -382,6 +387,7 @@ Usage:
 Where:
     !t    remove the entries that have no transcoded file
     !r    remove the entries that are not ranked
+    !-r    remove the entries that are ranked
 """
 
     def run(self, history, item_list, current_index, args):
@@ -393,11 +399,14 @@ Where:
                 if cmd == '!t':
                     if item.transcoded_to is None or not os.path.isfile(item.transcoded_to):
                         filter = True
-                        break
                 elif cmd == '!r':
                     if TAG_RANK not in item.tags:
                         filter = True
-                        break
+                elif cmd == '!-r':
+                    if TAG_RANK in item.tags:
+                        filter = True
+                if filter:
+                    break
             if filter:
                 del item_list[i]
             else:
@@ -562,7 +571,12 @@ ACTIONS_ANY = [
 def add_actions_to_options(action_list, options):
     for action in action_list:
         for c in action.cmds:
-            options[c] = action
+            if c in options:
+                print('Duplicate commands for {0} and {1}'.format(
+                    ' | '.join(action.cmds), ' | '.join(options[c])
+                ))
+            else:
+                options[c] = action
 
 
 def commit():
