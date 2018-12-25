@@ -1,4 +1,13 @@
 
+import os
+from .tag import (
+    ARTIST_NAME,
+    SONG_NAME,
+)
+from .unidecode import (
+    to_ascii,
+    to_punycode,
+)
 
 def simplify_name(name_root):
     name_root = to_ascii(name_root)
@@ -14,8 +23,8 @@ def simplify_name(name_root):
     return ret
 
 def to_filename(probe, dirname, ext):
-    artist = probe.tag(tag.ARTIST_NAME)
-    song = probe.tag(tag.SONG_NAME)
+    artist = probe.tag(ARTIST_NAME)
+    song = probe.tag(SONG_NAME)
     name = None
     if artist is None and song is None:
         name = os.path.splitext(os.path.basename(probe.filename))[0]
