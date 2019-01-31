@@ -40,7 +40,7 @@ class MediaCache(object):
         self.__filename_order.append(filename)
         self.__cache_by_filename[filename] = entry
         return entry
-
+    
     def commit(self):
         dirty = []
         for entry in self.__cache_by_filename.values():
@@ -77,6 +77,7 @@ class MediaEntry(object):
         self.__duplicate_data = None
         self.__duplicate_files_dirty = None
         self.__index = index
+        self.__probe = None
         # __duplicate_data is a map of duplicate file names to the
         # duplicate entry ID
         # __duplicate_files_dirty is a list of filenames that may or may not
@@ -101,6 +102,20 @@ class MediaEntry(object):
     @property
     def is_marked(self):
         return self.__marked
+    
+    @property
+    def probe(self):
+        if self.__probe is None:
+            self.__probe = probe_media_file(self.__source)
+        return self.__probe
+    
+    def set_transcoded_to(self, destfile):
+        # Update immediately the transcode.
+        if destfile != self.__transcoded:
+            if self.__transcoded is not None:
+                self.__history.delete_transcoded_to(self.probe)
+            self.__transcoded = destfile
+            self.__history.transcoded_to(self.probe, destfile)       
 
     @property
     def duplicate_filenames(self):
@@ -145,6 +160,10 @@ class MediaEntry(object):
         # ensure the cache is right
         self.__tag_keyword_cache()
         return tuple(self.__keywords)
+    
+    @property
+    def has_duplicates(self):
+        return len(self.duplicate_filenames) > 0
 
     @property
     def _is_dirty(self):
@@ -193,8 +212,7 @@ class MediaEntry(object):
                 self.__tags = self.__history.get_tags_for(self.__source)
                 self.__keywords = self.__history.get_keywords_for(self.__source)
             elif is_media_file_supported(self.__source):
-                probe = probe_media_file(self.__source)
-                self.__tags = probe.get_tags()
+                self.__tags = self.probe.get_tags()
                 self.__keywords = get_keywords_for_tags(self.__tags)
             else:
                 self.__tags = {}

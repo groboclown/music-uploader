@@ -11,12 +11,13 @@ from convertmusic.tools import (
     MediaProbe,
     to_ascii,
     tag,
+    get_destdir,
+    transcode_correct_format,
 )
 from convertmusic.tools.cli_output import (OutlineOutput, YamlOutput, JsonOutput)
 from convertmusic.tools.filename_util import (simplify_name, to_filename)
 
 SKIP_DIR_FILENAME = '.skip'
-MAX_FILES_PER_DIR = 1000
 
 def _out_writer(text):
     print(text)
@@ -61,72 +62,6 @@ def find_new_media(rootdir, history):
 def copy_file(src_file, target_file):
     shutil.copyfile(src_file, target_file)
 
-def transcode(probe, dest_dir):
-    # Supported formats:
-    # If the format is not exactly one of these, then re-encode it.
-    #   MP3
-    #     mpeg1 layer3
-    #        frequencies: 32k, 44.1k, 48k
-    #        bit rates: 32-320 kbps
-    #     mpeg2 lsf layer3
-    #        frequencies: 16k, 22.05k, 24k
-    #        bit rates: 8-160 kbps
-    #   WMA
-    #     version 7, 8, 9
-    #     frequencies: 32k, 44.1k, 48k
-    #     v7,8 bit rates: 48-192 kbps
-    #     v9 bit rates: 48-320 kpbs
-    #   AAC
-    #     mpeg4/aac-lc
-    #     frequencies: 11.025, 12, 16, 22.05, 24, 32, 44.1, 48
-    #     bit rates: 16-320
-    if probe.codec.lower() == 'mp3':
-        if (probe.sample_rate in (32000, 44100, 48000) and
-                (probe.bit_rate >= 32000 and probe.bit_rate <= 320000) and
-                probe.channels == 2):
-            destfile = to_filename(probe, dest_dir, 'mp3')
-            copy_file(probe.filename, destfile)
-            return destfile
-    if probe.codec.lower() == 'wma':
-        if (probe.sample_rate in (32000, 44100, 48000) and
-                (probe.bit_rate >= 48000 and probe.bit_rate <= 192000) and
-                probe.channels == 2):
-            destfile = to_filename(probe, dest_dir, 'wma')
-            copy_file(probe.filename, destfile)
-            return destfile
-    if probe.codec.lower() == 'aac':
-        if (probe.sample_rate in (11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000) and
-                (probe.bit_rate >= 16000 and probe.bit_rate <= 320000) and
-                probe.channels == 2):
-            destfile = to_filename(probe, dest_dir, 'm4a')
-            copy_file(probe.filename, destfile)
-            return destfile
-    # Convert to aac, without losing quality.
-    bit_rate = probe.bit_rate
-    sample_rate = probe.sample_rate
-    for br in (11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000):
-        if bit_rate < br:
-            bit_rate = br
-            break
-    if sample_rate < 16000:
-        sample_rate = 16000
-    if sample_rate > 320000:
-        sample_rate = 320000
-    destfile = to_filename(probe, dest_dir, 'm4a')
-    probe.transcode(destfile, sample_rate=sample_rate, bit_rate=bit_rate, channels=2, codec='aac')
-    return destfile
-
-def get_destdir(base_destdir):
-    biggest = 0
-    for f in os.listdir(base_destdir):
-        fn = os.path.join(base_destdir, f)
-        if os.path.isdir(fn) and f.isdigit() and int(f) > biggest:
-            biggest = int(f)
-    dn = os.path.join(base_destdir, '{0:06d}'.format(biggest))
-    if os.path.isdir(dn) and len(os.listdir(dn)) > MAX_FILES_PER_DIR:
-        dn = os.path.join(base_destdir, '{0:06d}'.format(biggest + 1))
-    return dn
-
 def process_probe(history, base_destdir, probe):
     OUTPUT.dict_start(probe.filename)
     try:
@@ -161,7 +96,7 @@ def process_probe(history, base_destdir, probe):
         OUTPUT.dict_item('title', probe.tag(tag.SONG_NAME))
         OUTPUT.dict_item('artist', probe.tag(tag.ARTIST_NAME))
         #print("{0} ({1} by {2})".format(probe.filename, probe.tag(tag.SONG_NAME), probe.tag(tag.ARTIST_NAME)))
-        destfile = transcode(probe, destdir)
+        destfile = transcode_correct_format(history, probe, destdir)
         OUTPUT.dict_item('destination', destfile)
         #print("   -> {0}".format(destfile))
         history.mark_found(probe)

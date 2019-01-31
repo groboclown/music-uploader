@@ -7,6 +7,8 @@ from .xmp_lib.xmp_probe import XmpProbeFactory
 from .player import MediaPlayer
 from . import cli_output
 from .tag_file import set_tags_on_file
+from .transcode import transcode_correct_format
+from .filename_util import get_destdir
 
 FFMPEG_FACTORY = FfProbeFactory()
 XMP_FACTORY = XmpProbeFactory()

@@ -11,14 +11,14 @@ from convertmusic.cmd import (
 from convertmusic.cache import (MediaCache, MediaEntry)
 from convertmusic.tools import (
     is_media_file_supported,
-    probe_media_file,
     MediaProbe,
     to_ascii,
     tag,
     set_tags_on_file,
     FfProbeFactory,
     get_media_player,
-    filename_util
+    get_destdir,
+    transcode_correct_format,
 )
 
 NUMBER_PATTERN = re.compile(r'^\d+$')
@@ -387,7 +387,8 @@ Usage:
 Where:
     !t    remove the entries that have no transcoded file
     !r    remove the entries that are not ranked
-    !-r    remove the entries that are ranked
+    !-r   remove the entries that are ranked
+    !d    remove entires marked as duplicate of another file
 """
 
     def run(self, history, item_list, current_index, args):
@@ -404,6 +405,9 @@ Where:
                         filter = True
                 elif cmd == '!-r':
                     if TAG_RANK in item.tags:
+                        filter = True
+                elif cmd == '!d':
+                    if item.has_duplicates:
                         filter = True
                 if filter:
                     break
@@ -520,13 +524,31 @@ class TranscodeAction(Action):
         self.desc = "Transcode the file again."
         self.help = """
 Usage:
-    transcode ????
+    transcode [-np]
 Where:
-    Need to allow passing in options to force it to operate a specific way.
+    -np     don't play the transcoded file after transcoding.
+
+Re-attempts to transcode the file.  If the transcoded file doesn't exist,
+it will be created.
 """
 
     def run(self, history, item_list, current_index, args):
-        print("NOT IMPLEMENTED")
+        # FIXME HAAAAAACK
+        # This should be fetched from elsewhere.
+        base_destdir = sys.argv[1]
+
+        current = item_list[current_index]
+        original = current.transcoded_to
+        if original is not None and os.path.exists(original):
+            os.unlink(original)
+        destfile = transcode_correct_format(history, current.probe, get_destdir(base_destdir))
+        if original != destfile:
+            print("[debug] replacing old transcode dest ({0}) with ({1})".format(original, destfile))
+            current.set_transcoded_to(destfile)
+            print("New transcoded file recorded at {0}".format(destfile))
+        if "-np" not in args:
+            get_media_player().play_file(destfile)
+        return current_index
 
 
 class NormalizeAction(Action):

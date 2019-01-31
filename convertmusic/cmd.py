@@ -1,6 +1,10 @@
 
 import os
 import sys
+try:
+    import readline
+except:
+    pass
 from .db import get_history
 from .tools.cli_output import OutlineOutput, JsonOutput, YamlOutput, Output
 from . import transform_db_path
@@ -235,9 +239,14 @@ def prompt_key(msg, keys):
 
 
 def prompt_value(msg):
-    sys.stdout.write('{0} > '.format(msg))
-    sys.stdout.flush()
-    ret = sys.stdin.readline().strip()
+    # Raw input reading, does not support "readline" input nice-ness.
+    # sys.stdout.write('{0} > '.format(msg))
+    # sys.stdout.flush()
+    # ret = sys.stdin.readline().strip()
+
+    # Normal Python stdin reading, which includes support for readline.
+    ret = input('{0} > '.format(msg))
+
     if len(ret) <= 0:
         return None
     return ret
