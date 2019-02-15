@@ -255,6 +255,8 @@ Where:
                 key = args[0]
         max_len = str(len(str(start + count - 1)))
         for i in range(start, start + count):
+            if i >= len(item_list):
+                break
             item = item_list[i]
             assert isinstance(item, MediaEntry)
             if key == 'source':
