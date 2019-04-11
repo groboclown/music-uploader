@@ -245,7 +245,10 @@ def prompt_value(msg):
     # ret = sys.stdin.readline().strip()
 
     # Normal Python stdin reading, which includes support for readline.
-    ret = input('{0} > '.format(msg))
+    try:
+        ret = input('{0} > '.format(msg))
+    except:
+        return None
 
     if len(ret) <= 0:
         return None

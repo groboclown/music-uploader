@@ -4,6 +4,8 @@ import os
 import sys
 import shlex
 import re
+import tempfile
+import shutil
 from convertmusic.db import MediaFileHistory
 from convertmusic.cmd import (
     Cmd, std_main, OUTPUT, prompt_key, prompt_value
@@ -19,6 +21,7 @@ from convertmusic.tools import (
     get_media_player,
     get_destdir,
     transcode_correct_format,
+    normalize_audio
 )
 
 NUMBER_PATTERN = re.compile(r'^\d+$')
@@ -497,7 +500,7 @@ class DeleteTranscodeAction(Action):
             try:
                 os.unlink(target)
                 print("Deleted {0}".format(target))
-            except:
+            except Exception as e:
                 print("Could not remove file `{0}`".format(target))
 
 
@@ -555,17 +558,55 @@ it will be created.
 
 class NormalizeAction(Action):
     def __init__(self):
-        self.cmds = ['normalize', 'nz']
+        self.cmds = ['normalize', 'nz', 'norm']
         self.desc = "Normalize the audio level, so that its volume is not too quiet"
         self.help = """
 Usage:
-    normalize [percent]
+    normalize [headroom]
 Where:
-    percent   the percent of the maximum volume to set.  Defaults to 95.
+    headroom   the decimal amount of "headroom" to leave above the peak level,
+               in decibels.  Defaults to 0.1
 """
 
     def run(self, history, item_list, current_index, args):
-        print("NOT IMPLEMENTED")
+        current = item_list[current_index]
+        output_fd,output_file = tempfile.mkstemp(
+            suffix=os.path.splitext(current.transcoded_to)[1])
+        headroom = 0.1
+        if len(args) > 0:
+            try:
+                headroom = float(args[0])
+                if headroom < 0:
+                    print('headroom value must be a positive number.')
+                    return current_index
+            except:
+                print('headroom value must be a floating point value, read {0}'.format(args[0]))
+                return current_index
+        print("Normalizing file by {1:#.1f} into {0}".format(output_file, headroom))
+        os.close(output_fd)
+        try:
+            increase = normalize_audio(current.transcoded_to, output_file, headroom)
+            if increase is None:
+                print("Can't normalize.")
+                break
+            print("Increased volume by {0}dB".format(increase))
+            while True:
+                print("p) play normalized, K) keep normalized, s) skip normalization")
+                v = prompt_value('pKs')
+                if v == 'p':
+                    get_media_player().play_file(output_file)
+                if v == 'K':
+                    shutil.copyfile(output_file, current.transcoded_to)
+                    break
+                if v == 's':
+                    break
+        #except Exception as e:
+        #    print(str(e))
+        #    print(e)
+        #    return current_index
+        finally:
+            os.unlink(output_file)
+        return current_index
 
 
 ACTIONS_WITH_CURRENT = [
@@ -640,7 +681,11 @@ class CmdInteractive(Cmd):
             text = None
             while text is None or len(text) <= 0:
                 text = prompt_value(prompt)
-            p = shlex.split(text, False)
+            try:
+                p = shlex.split(text, False)
+            except Exception as e:
+                print("Invalid command: {0}".format(e))
+                continue
             if p[0] not in options:
                 print("Unknown command: {0}".format(p[0]))
                 print("Use '?' for help.")

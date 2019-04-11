@@ -200,7 +200,7 @@ class MediaFileHistory(object):
         return self.__db.find_target_files(like)
     
     def is_transcoded_filename(self, name):
-        return self.__db.get_source_file_for_target_file(transcoded_filename) is not None
+        return self.__db.get_source_file_for_target_file(name) is not None
 
     def get_duplicates(self, probe_or_filename):
         if not isinstance(probe_or_filename, str):

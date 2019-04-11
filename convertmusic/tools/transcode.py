@@ -1,6 +1,10 @@
 import os
+import shutil
 from .probe import MediaProbe
 from .filename_util import to_filename
+
+def copy_file(src_file, target_file):
+    shutil.copyfile(src_file, target_file)
 
 def transcode_correct_format(history, probe, dest_dir):
     # Supported formats:

@@ -31,16 +31,21 @@ def find_files(rootdir):
     sub-directories are skipped.
     """
     remaining_dirs = [rootdir]
+    seen_dirs = set()
     while len(remaining_dirs) > 0:
         basedir = remaining_dirs.pop()
+        seen_dirs.add(basedir)
         if os.path.isfile(os.path.join(basedir, SKIP_DIR_FILENAME)):
             continue
         for f in os.listdir(basedir):
             filename = os.path.join(basedir, f)
             if os.path.isdir(filename):
-                remaining_dirs.append(filename)
+                if filename not in seen_dirs:
+                    remaining_dirs.append(filename)
             elif os.path.isfile(filename):
                 yield filename
+            elif os.path.islink(filename):
+                OUTPUT.error('Link to non-existent file: {0}'.format(filename))
 
 def find_new_media(rootdir, history):
     """
@@ -49,6 +54,7 @@ def find_new_media(rootdir, history):
     assert isinstance(history, MediaFileHistory)
     for filename in find_files(rootdir):
         # print("DEBUG - checking {0}".format(repr(filename)))
+        # print('DEBUG checking {0}: supported? {1} processed? {2}'.format(filename, is_media_file_supported(filename), history.is_processed(filename)))
         if is_media_file_supported(filename) and not history.is_processed(filename):
             try:
                 probe = probe_media_file(filename)
@@ -58,9 +64,6 @@ def find_new_media(rootdir, history):
                     filename, e
                 ))
                 # traceback.print_exc()
-
-def copy_file(src_file, target_file):
-    shutil.copyfile(src_file, target_file)
 
 def process_probe(history, base_destdir, probe):
     OUTPUT.dict_start(probe.filename)

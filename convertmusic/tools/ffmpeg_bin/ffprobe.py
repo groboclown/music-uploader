@@ -77,12 +77,13 @@ def __get_formats(arg):
     for line in __format_run(arg).splitlines():
         line = line.strip()
         if listing:
+            # Some video formats also include audio formats...
             if line[0] == 'A':
                 # audio format
                 parts = __format_split(line)
                 # print("DEBUG F- {0} -> {1}".format(repr(line), repr(parts)))
                 yield parts[1].strip().lower()
-        elif line == '------':
+        elif line.endswith('coders:'):
             listing = True
 
 
@@ -175,8 +176,11 @@ def find_supported_formats():
             if name in KNOWN_ALT_FORMATS:
                 for f in KNOWN_ALT_FORMATS[name]:
                     FORMATS.add(f.lower())
-    if len(FORMATS) <= 0:
-        FORMATS = FORMATS.union(BASIC_FORMATS)
+    #if len(FORMATS) <= 0:
+    #    FORMATS = FORMATS.union(BASIC_FORMATS)
+    # There are some audio formats that are marked as video,
+    # so they are missed.  This ensures we pick them up.
+    FORMATS = FORMATS.union(BASIC_FORMATS)
 
 
 class FfProbeFactory(ProbeFactory):
