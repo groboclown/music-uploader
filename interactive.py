@@ -588,7 +588,7 @@ Where:
             increase = normalize_audio(current.transcoded_to, output_file, headroom)
             if increase is None:
                 print("Can't normalize.")
-                break
+                return current_index
             print("Increased volume by {0}dB".format(increase))
             while True:
                 print("p) play normalized, K) keep normalized, s) skip normalization")
@@ -609,6 +609,123 @@ Where:
         return current_index
 
 
+class DuplicateManipulationAction(Action):
+    def __init__(self):
+        self.cmds = ['duplicate', 'dup']
+        self.desc = "manipulates the duplicate file handling"
+        self.help = """
+Usage:
+    duplicate
+
+Runs the interactive duplicate sub-menu.  This allows for:
+
+* Swapping which file is considered the "source".
+* Removing files as being marked as duplicate of the file.
+* Mark the current file as duplicate of some other file. (TODO)
+* Play one of the duplicate files.
+* Remove the original file of a duplicate.
+"""
+
+    def run(self, history, item_list, current_index, args):
+        current = item_list[current_index]
+        while True:
+            dup_data = self._get_dups(current, history)
+            print("s) skip, l) list, u) unmark duplicate, p) play a duplicate's source file,")
+            print("m) mark another file as duplicate of this file")
+            print("n) mark this file as a duplicate of another file")
+            print("N) set new source, X) delete duplicate source file,")
+            act = prompt_value("sldNX")
+            if act == 's':
+                break
+            elif act == 'l':
+                self._list_dups(dup_data)
+            elif act == 'u':
+                v = self._query_dup(dup_data)
+                if v >= 0:
+                    history.delete_duplicate_id(dup_data[v]['duplicate_id'])
+                    print('{0} no longer a duplicate of {1}'.format(
+                        dup_data[v]['filename'], current.source
+                    ))
+            elif act == 'p':
+                v = self._query_dup(dup_data)
+                if v >= 0:
+                    source = dup_data[v]['filename']
+                    if not os.path.isfile(source):
+                        print('Cannot find file `{0}`'.format(source))
+                    else:
+                        get_media_player().play_file(source)
+            elif act == 'm':
+                v = prompt_value("Source file which is a duplicate of this")
+                if v >= 0:
+                    print("NOT IMPLEMENTED YET")
+            elif act == 'N':
+                v = self._query_dup(dup_data)
+                if v >= 0:
+                    print("NOT IMPLEMENTED YET")
+            elif act == 'X':
+                v = self._query_dup(dup_data)
+                if v >= 0:
+                    cfn = prompt_value("Y) Permanently Delete {0}".format(
+                        dup_data[v]['filename']
+                    ))
+                    if cfn == 'Y':
+                        os.unlink(dup_data[v]['filename'])
+                        print('Permanently deleted {0}'.format(dup_data[v]['filename']))
+                    else:
+                        print('skipping permanent delete')
+        return current_index
+
+
+    def _get_dups(self, current, history):
+        ret = []
+        for entry in history.get_duplicate_data(current.probe):
+            if entry['source_location'] != current.probe.filename:
+                ret.append(entry)
+        return ret
+
+    def _list_dups(self, dup_data):
+        for pos in range(0, len(dup_data)):
+            print("{0}) {1}".format(pos + 1, dup_data[pos]['filename']))
+
+    def _query_dup(self, dup_data):
+        while True:
+            print("s) skip, 1-{0}")
+            v = prompt_value("s) skip, l) list, 1-{0}) select index".format(len(dup_data)))
+            if v == 's':
+                return -1
+            if v == 'l':
+                self._list_dups(dup_data)
+                continue
+            try:
+                pos = int(v) - 1
+                if pos >= 0 and pos < len(dup_data):
+                    return pos
+            except:
+                pass
+
+class TrimAudioAction(Action):
+    def __init__(self):
+        self.cmds = ['trim']
+        self.desc = "Trim the start and stop audio off the trancoded output"
+        self.help = """
+Usage:
+    trim [(mm):(ss) | -] [(mm):(ss) | -]
+Where:
+
+    The first argument is the time to trim from the start.  If "-" is given, then
+    nothing is trimmed from the start.
+
+    The second argument is the end time to trim off all audio after the time.
+    If "-" is given, then nothing is trimmed off the end.
+
+    So, if you run "trim 00:10 02:00", then the final file will be 1:50 in length.
+"""
+        
+    def run(self, history, item_list, current_index, args):
+        current = item_list[current_index]
+        print("NOT IMPLEMENTED YET")
+
+
 ACTIONS_WITH_CURRENT = [
     PlayCurrentAction(),
     ShowCurrentAction(),
@@ -617,6 +734,8 @@ ACTIONS_WITH_CURRENT = [
     RankAction(),
     TranscodeAction(),
     NormalizeAction(),
+    DuplicateManipulationAction(),
+    TrimAudioAction(),
 ]
 ACTIONS_WITH_LIST = [
     NextItemAction(),
