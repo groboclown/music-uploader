@@ -24,9 +24,18 @@ class MediaFileHistory(object):
         duplicate_of_id = self.__db.get_source_file_id(duplicate_of_filename)
         if duplicate_of_id is None:
             raise Exception('not registered: {0}'.format(duplicate_of_filename))
-        s_id = self._add_probe(source_probe)
+        s_id = self.__db.get_source_file_id(source_probe.filename)
+        if s_id is None:
+            s_id = self._add_probe(source_probe)
         d_id = duplicate_of_id
+        seen = set()
         while duplicate_of_id is not None:
+            if duplicate_of_id in seen:
+                # break early.  Something went wrong.
+                print("ERROR: LOOP ON DUP FOR {0} => {1}; {2}".format(
+                    source_probe.filename, duplicate_of_filename, seen))
+                break
+            seen.add(duplicate_of_id)
             d_id = duplicate_of_id
             duplicate_of_id = self.__db.get_duplicate_of_id(d_id)
         self.__db.add_duplicate(s_id, d_id)

@@ -10,6 +10,7 @@ from .tag_file import set_tags_on_file
 from .transcode import transcode_correct_format
 from .filename_util import get_destdir
 from .normalize import normalize_audio
+from .trim import trim_audio
 
 FFMPEG_FACTORY = FfProbeFactory()
 XMP_FACTORY = XmpProbeFactory()

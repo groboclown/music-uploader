@@ -35,7 +35,7 @@ class MediaCache(object):
             del self.__filename_order[0]
             old_entry = self.__cache_by_filename[oldest]
             if old_entry._is_dirty:
-                self._dirty[oldest] = old_entry
+                self.__dirty[oldest] = old_entry
             del self.__cache_by_filename[oldest]
         self.__filename_order.append(filename)
         self.__cache_by_filename[filename] = entry

@@ -21,7 +21,8 @@ from convertmusic.tools import (
     get_media_player,
     get_destdir,
     transcode_correct_format,
-    normalize_audio
+    normalize_audio,
+    trim_audio
 )
 
 NUMBER_PATTERN = re.compile(r'^\d+$')
@@ -630,6 +631,9 @@ Runs the interactive duplicate sub-menu.  This allows for:
         current = item_list[current_index]
         while True:
             dup_data = self._get_dups(current, history)
+            if len(dup_data) <= 0:
+                print("No duplicates left.")
+                break
             print("s) skip, l) list, u) unmark duplicate, p) play a duplicate's source file,")
             print("m) mark another file as duplicate of this file")
             print("n) mark this file as a duplicate of another file")
@@ -638,16 +642,16 @@ Runs the interactive duplicate sub-menu.  This allows for:
             if act == 's':
                 break
             elif act == 'l':
-                self._list_dups(dup_data)
+                self._list_dups(current, dup_data)
             elif act == 'u':
-                v = self._query_dup(dup_data)
+                v = self._query_dup(current, dup_data)
                 if v >= 0:
                     history.delete_duplicate_id(dup_data[v]['duplicate_id'])
                     print('{0} no longer a duplicate of {1}'.format(
                         dup_data[v]['filename'], current.source
                     ))
             elif act == 'p':
-                v = self._query_dup(dup_data)
+                v = self._query_dup(current, dup_data)
                 if v >= 0:
                     source = dup_data[v]['filename']
                     if not os.path.isfile(source):
@@ -659,22 +663,32 @@ Runs the interactive duplicate sub-menu.  This allows for:
                 if v >= 0:
                     print("NOT IMPLEMENTED YET")
             elif act == 'N':
-                v = self._query_dup(dup_data)
+                v = self._query_dup(current, dup_data)
                 if v >= 0:
-                    print("NOT IMPLEMENTED YET")
+                    selected = dup_data[v]
+                    new_source_filename = dup_data[v]['filename']
+                    history.mark_duplicate(current.probe, new_source_filename)
+                    for i in range(0, len(dup_data)):
+                        if i != v:
+                            dup = dup_data[i]
+                            dup_probe = CACHE.get(selected['filename'])
+                            history.delete_duplicate_id(dup['duplicate_id'])
+                            history.mark_duplicate(dup_probe.probe, new_source_filename)
+                    print('New source of duplicates is {0}'.format(new_source_filename))
             elif act == 'X':
-                v = self._query_dup(dup_data)
+                v = self._query_dup(current, dup_data)
                 if v >= 0:
-                    cfn = prompt_value("Y) Permanently Delete {0}".format(
-                        dup_data[v]['filename']
-                    ))
+                    dup = dup_data[v]
+                    cfn = prompt_value("Y) Permanently Delete {0}".format(dup['filename']))
                     if cfn == 'Y':
-                        os.unlink(dup_data[v]['filename'])
-                        print('Permanently deleted {0}'.format(dup_data[v]['filename']))
+                        history.delete_duplicate_id(dup['duplicate_id'])
+                        history.delete_source_record(dup['filename'])
+                        if os.path.isfile(dup['filename']):
+                            os.unlink(dup['filename'])
+                        print('Permanently deleted {0}'.format(dup['filename']))
                     else:
                         print('skipping permanent delete')
         return current_index
-
 
     def _get_dups(self, current, history):
         ret = []
@@ -683,18 +697,22 @@ Runs the interactive duplicate sub-menu.  This allows for:
                 ret.append(entry)
         return ret
 
-    def _list_dups(self, dup_data):
+    def _list_dups(self, current, dup_data):
         for pos in range(0, len(dup_data)):
-            print("{0}) {1}".format(pos + 1, dup_data[pos]['filename']))
+            is_source = dup_data[pos]['source_location'] == current.source
+            print("{0}) {1}{2}".format(
+                pos + 1,
+                dup_data[pos]['filename'],
+                is_source and " (source)" or ""
+            ))
 
-    def _query_dup(self, dup_data):
+    def _query_dup(self, current, dup_data):
         while True:
-            print("s) skip, 1-{0}")
             v = prompt_value("s) skip, l) list, 1-{0}) select index".format(len(dup_data)))
             if v == 's':
                 return -1
             if v == 'l':
-                self._list_dups(dup_data)
+                self._list_dups(current, dup_data)
                 continue
             try:
                 pos = int(v) - 1
@@ -720,10 +738,38 @@ Where:
 
     So, if you run "trim 00:10 02:00", then the final file will be 1:50 in length.
 """
-        
+    
     def run(self, history, item_list, current_index, args):
         current = item_list[current_index]
-        print("NOT IMPLEMENTED YET")
+        if len(args) != 2:
+            print(self.help)
+            return current_index
+        start_time = args[0]
+        end_time = args[1]
+        output_fd,output_file = tempfile.mkstemp(
+            suffix=os.path.splitext(current.transcoded_to)[1])
+        os.close(output_fd)
+        try:
+            worked = trim_audio(current.transcoded_to, output_file, start_time, end_time)
+            if not worked:
+                return current_index
+            while True:
+                print("p) play trimmed, K) keep trimmed, s) skip trimming")
+                v = prompt_value('pKs')
+                if v == 'p':
+                    get_media_player().play_file(output_file)
+                if v == 'K':
+                    shutil.copyfile(output_file, current.transcoded_to)
+                    break
+                if v == 's':
+                    break
+        #except Exception as e:
+        #    print(str(e))
+        #    print(e)
+        #    return current_index
+        finally:
+            os.unlink(output_file)
+        return current_index
 
 
 ACTIONS_WITH_CURRENT = [

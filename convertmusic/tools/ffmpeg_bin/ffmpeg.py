@@ -10,6 +10,8 @@ def convert(srcfile, outfile, bit_rate, channels, sample_rate, codec, tags, volu
     Converts the source file to the outfile with the proper transformations.
     Includes the additional tags.
     """
+    if srcfile == outfile:
+        raise Exception('Does not support overwriting file')
 
     if os.path.isfile(outfile):
         os.unlink(outfile)
@@ -35,6 +37,36 @@ def convert(srcfile, outfile, bit_rate, channels, sample_rate, codec, tags, volu
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE)
 
+
+def trim_audio(srcfile, outfile, start_time, end_time):
+    """
+    Trims audio.  Start and end time must be in the "hh:mm:ss.nn" format (e.g. 00:01:22.00)
+    """
+    if srcfile == outfile:
+        raise Exception('Does not support overwriting file')
+
+    if os.path.isfile(outfile):
+        os.unlink(outfile)
+    
+    cmd = [
+        BIN_FFMPEG, '-i', srcfile,
+        #'-movflags', 'use_metadata_tags',
+        '-map_metadata', '0:g',
+        '-map_metadata:s:a', '0:g',
+        '-c', 'copy'
+    ]
+    if start_time is not None:
+        cmd.extend(['-ss', start_time])
+    if end_time is not None:
+        cmd.extend(['-to', end_time])
+
+    cmd.append(outfile)
+
+    print('Running "{0}"'.format(' '.join(cmd)))
+    subprocess.run(cmd,
+        check=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE)
 
 
 LINE_MEAN_VOLUME = \
