@@ -5,7 +5,8 @@ import re
 
 BIN_FFMPEG = 'ffmpeg'
 
-def convert(srcfile, outfile, bit_rate, channels, sample_rate, codec, tags, volume=None):
+
+def convert(srcfile, outfile, bit_rate, channels, sample_rate, codec, tags, volume=None, verbose=False):
     """
     Converts the source file to the outfile with the proper transformations.
     Includes the additional tags.
@@ -30,6 +31,8 @@ def convert(srcfile, outfile, bit_rate, channels, sample_rate, codec, tags, volu
         cmd.append('-metadata')
         cmd.append('{0}={1}'.format(k, v))
     cmd.append(outfile)
+    if verbose:
+        print(' '.join(cmd))
 
     # force bits per sample = 16.
     subprocess.run(cmd,

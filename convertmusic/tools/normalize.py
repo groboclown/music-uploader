@@ -8,6 +8,7 @@ from .ffmpeg_bin import ffmpeg, ffprobe
 
 EPSILON = 0.0001
 
+
 def normalize_audio(audio_file, dest_file, headroom=0.1):
     """
     Attempts to normalize the audio.  It does so through a two-pass

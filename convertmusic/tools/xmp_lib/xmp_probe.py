@@ -101,7 +101,7 @@ class XmpProbe(MediaProbe):
         #print("DEBUG {0} {1} {2}".format(repr(filename), repr(self.codec), repr(comment_lines)))
         comment_tag_extract(self, mod.name.decode('ascii', 'ignore'), comment_lines)
 
-    def transcode(self, tofile, sample_rate = 44100, bit_rate = 0, channels = 2, codec = None):
+    def transcode(self, tofile, sample_rate = 44100, bit_rate = 0, channels = 2, codec = None, verbose=False):
         # First, transform to a temporary wav file.
         tmp = 'tmp.wav'
         if os.path.exists(tmp):

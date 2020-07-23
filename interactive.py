@@ -41,6 +41,11 @@ def print_entries(entries, history):
         OUTPUT.dict_start(entry.source)
         OUTPUT.dict_item('marked', entry.is_marked)
         OUTPUT.dict_item('transcoded_to', entry.transcoded_to)
+        OUTPUT.dict_item(
+            'transcoded_exists',
+            os.path.isfile(entry.transcoded_to) if entry.transcoded_to else False
+        )
+        OUTPUT.dict_item('source_exists', os.path.isfile(entry.source))
         OUTPUT.list_start('duplicates')
         for dn in entry.duplicate_filenames:
             #OUTPUT.dict_start(dn)
@@ -392,8 +397,10 @@ Usage:
     filter [!t] [!r]
 Where:
     !t    remove the entries that have no transcoded file
+    !-t   remove the entries that have a transcoded file
     !r    remove the entries that are not ranked
     !-r   remove the entries that are ranked
+    !s    remove the entries that have no source file
     !d    remove entires marked as duplicate of another file
 """
 
@@ -406,6 +413,9 @@ Where:
                 if cmd == '!t':
                     if item.transcoded_to is None or not os.path.isfile(item.transcoded_to):
                         filter = True
+                elif cmd == '!-t':
+                    if item.transcoded_to and os.path.isfile(item.transcoded_to):
+                        filter = True
                 elif cmd == '!r':
                     if TAG_RANK not in item.tags:
                         filter = True
@@ -414,6 +424,9 @@ Where:
                         filter = True
                 elif cmd == '!d':
                     if item.has_duplicates:
+                        filter = True
+                elif cmd == '!s':
+                    if not item.source or not os.path.isfile(item.source):
                         filter = True
                 if filter:
                     break
@@ -530,9 +543,11 @@ class TranscodeAction(Action):
         self.desc = "Transcode the file again."
         self.help = """
 Usage:
-    transcode [-np]
+    transcode [-np] [-v] [-norm]
 Where:
     -np     don't play the transcoded file after transcoding.
+    -v      show the transcode command
+    -norm   attempt to normalize with 0.1 headroom.
 
 Re-attempts to transcode the file.  If the transcoded file doesn't exist,
 it will be created.
@@ -544,14 +559,33 @@ it will be created.
         base_destdir = sys.argv[1]
 
         current = item_list[current_index]
+        if not os.path.isfile(current.probe.filename):
+            print("Original file does not exist anymore: {0}".format(current.probe.filename))
+            return current_index
         original = current.transcoded_to
         if original is not None and os.path.exists(original):
             os.unlink(original)
-        destfile = transcode_correct_format(history, current.probe, get_destdir(base_destdir))
+        verbose = '-v' in args
+        destfile = transcode_correct_format(history, current.probe, get_destdir(base_destdir), verbose=verbose)
         if original != destfile:
             print("[debug] replacing old transcode dest ({0}) with ({1})".format(original, destfile))
             current.set_transcoded_to(destfile)
             print("New transcoded file recorded at {0}".format(destfile))
+        if '-norm' in args:
+            output_fd, output_file = tempfile.mkstemp(
+                suffix=os.path.splitext(destfile)[1])
+            try:
+                headroom = 0.1
+                print("Normalizing file by {1:#.1f} into {0}".format(output_file, headroom))
+                os.close(output_fd)
+                increase = normalize_audio(destfile, output_file, headroom)
+                if increase is None:
+                    print("Can't normalize.")
+                else:
+                    print("Increased volume by {0}dB".format(increase))
+                    shutil.copyfile(output_file, destfile)
+            finally:
+                os.unlink(output_file)
         if "-np" not in args:
             get_media_player().play_file(destfile)
         return current_index
@@ -841,7 +875,7 @@ class CmdInteractive(Cmd):
                     current = item_list[current_index]
                 prompt = "(at list end)"
             if current is not None:
-                prompt = "{0}\n{2}/{1}".format(current.source, len(item_list), current_index)
+                prompt = "{0}\n{2}/{1}".format(current.source, len(item_list) - 1, current_index)
                 add_actions_to_options(ACTIONS_WITH_CURRENT, options)
             text = None
             while text is None or len(text) <= 0:

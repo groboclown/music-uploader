@@ -1,17 +1,10 @@
 # Convert Your Music Library
 
-I have a messy music library, and I want to make a USB stick of my music
-that's in a compatible format for my car.  This project contains tools that
-converts the files to a compatible format, puts them into a shallow directory
-structure that the limited file manager can deal with, simplifies the names
-of the files so that they don't contain weirdness, tries to fix or guess
-the media file tagging, and so on.
+I have a messy music library, and I want to make a USB stick of my music that's in a compatible format for my car.  This project contains tools that converts the files to a compatible format, puts them into a shallow directory structure that the limited file manager can deal with, simplifies the names of the files so that they don't contain weirdness, tries to fix or guess the media file tagging, and so on.
 
-If the media file is already in a compatible format, then it is simply
-copied to the output directory, rather than transcoded.
+If the media file is already in a compatible format, then it is simply copied to the output directory, rather than transcoded.
 
-It keeps a database in the output directory of the visited files, their
-discovered tags, their generated files, and the detected duplicates.
+It keeps a database in the output directory of the visited files, their discovered tags, their generated files, and the detected duplicates.
 
 
 # Running
@@ -19,14 +12,12 @@ discovered tags, their generated files, and the detected duplicates.
 The general conversion is done by:
 
 ```
-python3 main.py (source music directory) (output directory)
+python3 import.py (source music directory) (output directory)
 ```
 
-The other tools in the root directory are for managing the transcoded
-files.
+The other tools in the root directory are for managing the transcoded files.
 
-You can add a file `.skip` in any directory you want to skip.  Those will not
-be scanned for audio files.
+You can add a file `.skip` in any directory you want to skip.  Those will not be scanned for audio files.
 
 # Dependencies:
 
@@ -40,13 +31,9 @@ Right now, this uses:
 
 # About the Conversion
 
-The conversion attempts to transcode the audio files to meet several
-standards.
+The conversion attempts to transcode the audio files to meet several standards.
 
-The first is the file names.  File names are assumed to be limited to 32
-characters long, only ASCII names, and with a file extension that matches
-the codec's standard extension.  Additionally, the files are sorted into
-shallow directories (1 deep), with a maximum of 1000 files per directory.
+The first is the file names.  File names are assumed to be limited to 32 characters long, only ASCII names, and with a file extension that matches the codec's standard extension.  Additionally, the files are sorted into shallow directories (1 deep), with a maximum of 1000 files per directory.
 
 The second standard is the allowed file types.
 
@@ -73,5 +60,6 @@ The second standard is the allowed file types.
 * Add support for more mod files, like:
   * `.ahx` files (Amiga tracker files)
   * `.mo3` files.
-* Improve mod file comment parsing.
+* Improve mod file comment parsing.  This would be a good place for training AI.
 * Improve the metadata fixup tool.
+* Add duplicate file handling tools.  Interactive does this to some extent, but it needs to be drastically better.

@@ -94,6 +94,7 @@ def _json_probe(srcfile):
     """
     return json.loads(__run(srcfile))
 
+
 def _hash_tags(srcfile):
     with open(srcfile, 'rb') as inp:
         hashes = {
@@ -114,18 +115,18 @@ def _hash_tags(srcfile):
         return tags
 
 
-
 class FfProbe(MediaProbe):
     def __init__(self, filename):
         MediaProbe.__init__(self, filename)
 
-    def transcode(self, tofile, sample_rate = 44100, bit_rate = 0, channels = 2, codec = None):
+    def transcode(self, tofile, sample_rate = 44100, bit_rate = 0, channels = 2, codec = None, verbose=False):
         convert(self.filename, tofile,
             bit_rate=bit_rate,
             channels=channels,
             sample_rate=sample_rate,
             codec=codec,
-            tags=self.get_tags())
+            tags=self.get_tags(),
+            verbose=verbose)
 
 
 def probe(srcfile):

@@ -2,6 +2,7 @@
 Basic definition for a file probe, for inspecting the fields.
 """
 
+
 class MediaProbe(object):
     def __init__(self, filename):
         object.__init__(self)
@@ -42,7 +43,7 @@ class MediaProbe(object):
     def get_tags(self):
         return dict(self.__tags)
 
-    def transcode(self, tofile, sample_rate = 44100, bit_rate = 0, channels = 2, codec = None):
+    def transcode(self, tofile, sample_rate=44100, bit_rate=0, channels=2, codec=None, verbose=False):
         raise NotImplementedError()
 
 

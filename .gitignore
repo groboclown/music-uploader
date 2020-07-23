@@ -107,3 +107,4 @@ ENV/
 tmp.wav
 
 .vscode/
+.idea/
