@@ -19,10 +19,13 @@ from convertmusic.tools.filename_util import (simplify_name, to_filename)
 
 SKIP_DIR_FILENAME = '.skip'
 
+
 def _out_writer(text):
     print(text)
 
+
 OUTPUT = OutlineOutput(_out_writer)
+
 
 def find_files(rootdir):
     """
@@ -47,6 +50,7 @@ def find_files(rootdir):
             elif os.path.islink(filename):
                 OUTPUT.error('Link to non-existent file: {0}'.format(filename))
 
+
 def find_new_media(rootdir, history):
     """
     Returns media probes for media files not already processed.
@@ -64,6 +68,7 @@ def find_new_media(rootdir, history):
                     filename, e
                 ))
                 # traceback.print_exc()
+
 
 def process_probe(history, base_destdir, probe):
     OUTPUT.dict_start(probe.filename)

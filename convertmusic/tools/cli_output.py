@@ -58,7 +58,7 @@ class OutlineOutput(Output):
         Output.__init__(self, writer)
         self.__indent = 0
         self.__indent_amount = indent_amount
-        self.__section_count = []
+        self.__section_count = [0]
 
     def start(self):
         self.__section_count.append(0)

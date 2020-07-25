@@ -35,7 +35,7 @@ class DbApi(object):
         """
         raise NotImplementedError()
 
-    def get_source_files_with_tags(self, tags):
+    def get_source_files_with_tags(self, tags, exact=True):
         """
         Returns the source file names that has the matching tag keys to tag values.
         If none are found, then an empty list is returned.
@@ -57,4 +57,8 @@ class DbApi(object):
         Returns the source file ID of the file marked as a duplicate of the
         source file.
         """
+        raise NotImplementedError()
+
+    def close(self):
+        """Close the connection."""
         raise NotImplementedError()

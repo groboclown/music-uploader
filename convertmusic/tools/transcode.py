@@ -29,6 +29,7 @@ def transcode_correct_format(history, probe, dest_dir, verbose=False):
     #     bit rates: 16-320 kbps
 
     assert isinstance(probe, MediaProbe)
+    os.makedirs(dest_dir, exist_ok=True)
     assert os.path.isdir(dest_dir)
 
     if probe.codec.lower() == 'mp3':

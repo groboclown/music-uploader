@@ -11,6 +11,7 @@ from .unidecode import (
 
 MAX_FILES_PER_DIR = 1000
 
+
 def simplify_name(name_root):
     name_root = to_ascii(name_root)
     ret = ''
@@ -24,10 +25,12 @@ def simplify_name(name_root):
             ret += c
     return ret
 
+
 def to_filename(history, probe, dirname, ext):
+    while ext[0] == '.':
+        ext = ext[1:]
     artist = probe.tag(ARTIST_NAME)
     song = probe.tag(SONG_NAME)
-    name = None
     if artist is None and song is None:
         name = os.path.splitext(os.path.basename(probe.filename))[0]
     elif artist is None:
@@ -51,6 +54,7 @@ def to_filename(history, probe, dirname, ext):
         index += 1
 
     return bn
+
 
 def get_destdir(base_destdir):
     biggest = 0

@@ -1,6 +1,7 @@
 
 from .api import MediaFileHistory
 
+
 def get_history(db_filename):
     from .schema import SCHEMA
     from .meta import Db

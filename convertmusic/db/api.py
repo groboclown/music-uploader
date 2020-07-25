@@ -1,9 +1,9 @@
 
-from ..tools.unidecode import to_ascii
 from .db_api import DbApi
 
 from ..tools.tag import *
 from ..tools.keywords import get_keywords_for_tags
+
 
 class MediaFileHistory(object):
     def __init__(self, db):
@@ -124,7 +124,6 @@ class MediaFileHistory(object):
             else:
                 print(source_id)
 
-
     def get_exact_matches(self, probe):
         """
         Checks if the probe's key tags already exist in the database.
@@ -183,7 +182,7 @@ class MediaFileHistory(object):
         """
         s_id = self.__db.get_source_file_id(probe.filename)
         if s_id is None:
-            raise Exception('No such known source {0}'.format(prbe.filename))
+            raise Exception('No such known source {0}'.format(probe.filename))
         self.__db.add_target_file(s_id, target_file)
 
     def get_transcoded_to(self, probe_or_filename):
@@ -239,6 +238,7 @@ class MediaFileHistory(object):
 
 def _get_probe_keywords(probe):
     return get_keywords_for_tags(probe.get_tags())
+
 
 def _get_probe_keywords_for_tags(tags):
     return get_keywords_for_tags(tags)

@@ -9,10 +9,13 @@ from .db import get_history
 from .tools.cli_output import OutlineOutput, JsonOutput, YamlOutput, Output
 from . import transform_db_path
 
+
 def stdout_writer(text):
     print(text)
 
+
 OUTPUT = OutlineOutput(stdout_writer)
+
 
 class Cmd:
     def __init__(self):
@@ -46,6 +49,8 @@ class Cmd:
         """
         Processes the command with the parsed arguments.
         Returns an error code or 0 if there was no error.
+
+        @param history: MediaFileHistory
         """
         raise NotImplementedError()
 
@@ -85,7 +90,7 @@ class TransformTranscodeOption(Option):
 
     def process(self, arg):
         p = arg.find('=')
-        transform_transcode.set_transcode_transform(arg[0:p].strip(), arg[p+1:].strip())
+        transform_db_path.set_transcode_transform(arg[0:p].strip(), arg[p+1:].strip())
 
 
 class JsonOption(Option):
@@ -97,6 +102,8 @@ class JsonOption(Option):
 
     def process(self, arg):
         set_output('json')
+        return 0
+
 
 JSON_OPTION = JsonOption()
 
@@ -110,6 +117,8 @@ class YamlOption(Option):
 
     def process(self, arg):
         set_output('yaml')
+        return 0
+
 
 YAML_OPTION = YamlOption()
 
@@ -121,6 +130,7 @@ OUTPUT_TYPES = {
     'default': OutlineOutput,
     'outline': OutlineOutput
 }
+
 
 def set_output(output_type, writer=None):
     if isinstance(output_type, str):
@@ -160,7 +170,6 @@ def _help(exec_name, commands, options=None):
         print(("  {0:" + str(max_len) + "s}  {1}").format(cmd.name, cmd.desc))
     print("Use `(operation) help` for details on that command.")
     return 1
-
 
 
 def std_main(args, commands, options=None):

@@ -9,6 +9,7 @@ another.
 _TRANSCODE_ORIGINAL_BASE = None
 _TRANSCODE_TRANSFORM_BASE = None
 
+
 def tform_tcode(original_transcode_file):
     """
     Transform the database stored transcoded filename into the local
@@ -55,6 +56,7 @@ def set_transcode_transform(original_base, transform_base):
 
 _SOURCE_ORIGINAL_BASE = None
 _SOURCE_TRANSFORM_BASE = None
+
 
 def tform_src(original_src_file):
     """

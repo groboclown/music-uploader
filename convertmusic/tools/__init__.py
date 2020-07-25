@@ -38,6 +38,7 @@ def is_media_file_supported(filename):
             return True
     return False
 
+
 def probe_media_file_err(filename):
     err = None
     for f in PROBE_FACTORIES:

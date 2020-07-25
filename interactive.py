@@ -755,6 +755,7 @@ Runs the interactive duplicate sub-menu.  This allows for:
             except:
                 pass
 
+
 class TrimAudioAction(Action):
     def __init__(self):
         self.cmds = ['trim']
@@ -831,6 +832,7 @@ ACTIONS_ANY = [
     RevertAction(),
     CommitAction(),
 ]
+
 
 def add_actions_to_options(action_list, options):
     for action in action_list:
